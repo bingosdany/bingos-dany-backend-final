@@ -1,9 +1,9 @@
-
 const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
@@ -15,6 +15,7 @@ const upload = multer({ storage });
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
 
 app.post("/api/users", upload.single("proof"), async (req, res) => {
   try {
@@ -35,13 +36,16 @@ app.post("/api/users", upload.single("proof"), async (req, res) => {
       subject: "Nuevo registro - Bingos Dany",
       html: `<p><strong>Nombre:</strong> ${name}</p>
              <p><strong>Correo:</strong> ${email}</p>
-             <p><strong>Cantidad de cartones:</strong> ${count}</p>`,
-      attachments: [
-        {
-          filename: proofFile.originalname,
-          content: proofFile.buffer,
-        },
-      ],
+             <p><strong>Cantidad de cartones:</strong> ${count}</p>` +
+            (email ? `<p><strong>Correo del participante:</strong> ${email}</p>` : ""),
+      attachments: proofFile
+        ? [
+            {
+              filename: proofFile.originalname,
+              content: proofFile.buffer,
+            },
+          ]
+        : [],
     };
 
     await transporter.sendMail(mailOptions);
