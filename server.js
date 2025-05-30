@@ -22,6 +22,10 @@ app.post("/api/users", upload.single("proof"), async (req, res) => {
     const { name, email, count } = req.body;
     const proofFile = req.file;
 
+    if (!name || !email || !count || !proofFile) {
+      return res.status(400).json({ error: "Faltan campos obligatorios." });
+    }
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -34,17 +38,17 @@ app.post("/api/users", upload.single("proof"), async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "Nuevo registro - Bingos Dany",
-      html: `<p><strong>Nombre:</strong> ${name}</p>
-             <p><strong>Correo:</strong> ${email}</p>
-             <p><strong>Cantidad de cartones:</strong> ${count}</p>`,
-      attachments: proofFile
-        ? [
-            {
-              filename: proofFile.originalname,
-              content: proofFile.buffer,
-            },
-          ]
-        : [],
+      html: `
+        <p><strong>Nombre:</strong> ${name}</p>
+        <p><strong>Correo:</strong> ${email}</p>
+        <p><strong>Cantidad de cartones:</strong> ${count}</p>
+      `,
+      attachments: [
+        {
+          filename: proofFile.originalname,
+          content: proofFile.buffer,
+        },
+      ],
     };
 
     await transporter.sendMail(mailOptions);
