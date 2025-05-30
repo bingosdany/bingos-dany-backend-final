@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel de Administración - Bingos Dany</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #ffc107;
+      color: #000;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reservas Registradas</h1>
+  <table id="tablaReservas">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Cantidad</th>
+        <th>Comprobante</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    fetch("/api/reservas")
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector("#tablaReservas tbody");
+        data.forEach(registro => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${registro.name}</td>
+            <td>${registro.email}</td>
+            <td>${registro.count}</td>
+            <td><a href="${registro.fileUrl}" target="_blank">Ver</a></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => console.error("Error al cargar reservas:", err));
+  </script>
+</body>
+</html>
