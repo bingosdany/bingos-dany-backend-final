@@ -111,10 +111,10 @@
   </div>
 
   <form id="formulario">
-    <input type="text" name="nombre" placeholder="Tu nombre" required>
-    <input type="email" name="correo" placeholder="Tu correo" required>
-    <input type="number" name="cartones" placeholder="Cantidad de cartones" required>
-    <input type="file" name="comprobante" accept="image/*,application/pdf" required>
+    <input type="text" name="name" placeholder="Tu nombre" required>
+    <input type="email" name="email" placeholder="Tu correo" required>
+    <input type="number" name="count" placeholder="Cantidad de cartones" required>
+    <input type="file" name="proof" accept="image/*,application/pdf" required>
     <button type="submit">Enviar</button>
   </form>
 
@@ -135,12 +135,7 @@
     document.getElementById("formulario").addEventListener("submit", function(e) {
       e.preventDefault();
 
-      const formData = new FormData();
-      formData.append("name", e.target.nombre.value);
-      formData.append("email", e.target.correo.value);
-      formData.append("count", e.target.cartones.value);
-      formData.append("proof", e.target.comprobante.files[0]);
-
+      const formData = new FormData(e.target);
       fetch("https://bingos-dany-backend-final-production.up.railway.app/api/users", {
         method: "POST",
         body: formData
@@ -166,6 +161,10 @@
       const barra = document.getElementById("barra-progreso");
       barra.style.width = porcentaje + "%";
       barra.textContent = porcentaje + "%";
+      if (vendidos >= total) {
+        document.querySelector("form button").disabled = true;
+        alert("Ya se alcanzó el límite de cartones vendidos.");
+      }
     }
   </script>
 </body>
