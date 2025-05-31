@@ -1,44 +1,52 @@
 
 const express = require("express");
-const nodemailer = require("nodemailer");
 const cors = require("cors");
-const multer = require("multer");
-const path = require("path");
+const dotenv = require("dotenv");
 const { Pool } = require("pg");
-require("dotenv").config();
+const multer = require("multer");
+const nodemailer = require("nodemailer");
+const fs = require("fs");
+const path = require("path");
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Configurar conexión a PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL.includes("railway.app")
-    ? { rejectUnauthorized: false }
-    : false,
-});
-
-// Configurar multer para archivos
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Ruta para recibir usuarios y comprobantes
-app.post("/api/users", upload.single("proof"), async (req, res) => {
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => cb(null, file.originalname),
+});
+
+const upload = multer({ storage });
+
+app.post("/reserva", upload.single("comprobante"), async (req, res) => {
+  const { nombre, correo, cartones } = req.body;
+  const archivo = req.file;
+
+  if (!nombre || !correo || !cartones || !archivo) {
+    return res.status(400).send("Faltan datos");
+  }
+
+  const client = await pool.connect();
   try {
-    const { name, email, count } = req.body;
-    const proofFile = req.file;
-
-    // Guardar en la base de datos
-    await pool.query(
-      "INSERT INTO reservas (nombre, correo, cartones, comprobante, aprobado, fecha) VALUES ($1, $2, $3, $4, $5, NOW())",
-      [name, email, count, proofFile?.originalname || null, false]
+    await client.query(
+      "INSERT INTO reservas (nombre, correo, cartones, comprobante, aprobado) VALUES ($1, $2, $3, $4, false)",
+      [nombre, correo, cartones, archivo.filename]
     );
+    await client.release();
 
-    // Enviar correo
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -47,54 +55,29 @@ app.post("/api/users", upload.single("proof"), async (req, res) => {
       },
     });
 
-    const mailOptions = {
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
-      subject: "Nuevo registro - Bingos Dany",
-      html: `<p><strong>Nombre:</strong> ${name}</p>
-             <p><strong>Correo:</strong> ${email}</p>
-             <p><strong>Cantidad de cartones:</strong> ${count}</p>`,
-      attachments: proofFile
-        ? [
-            {
-              filename: proofFile.originalname,
-              content: proofFile.buffer,
-            },
-          ]
-        : [],
-    };
+      subject: "Nueva reserva recibida",
+      html: `<p><strong>Nombre:</strong> ${nombre}</p>
+             <p><strong>Correo:</strong> ${correo}</p>
+             <p><strong>Cartones:</strong> ${cartones}</p>`,
+      attachments: [
+        {
+          filename: archivo.originalname,
+          path: archivo.path,
+        },
+      ],
+    });
 
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Correo enviado y datos guardados correctamente." });
-  } catch (error) {
-    console.error("Error al procesar la solicitud:", error);
-    res.status(500).json({ error: "Error al enviar el correo o guardar en la base de datos." });
+    res.send("Reserva recibida correctamente");
+  } catch (err) {
+    await client.release();
+    console.error(err);
+    res.status(500).send("Error al guardar la reserva");
   }
 });
 
-// Ruta para obtener todas las reservas
-app.get("/api/reservas", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM reservas ORDER BY fecha DESC");
-    res.json(result.rows);
-  } catch (error) {
-    console.error("Error al obtener reservas:", error);
-    res.status(500).json({ error: "Error al obtener reservas" });
-  }
-});
-
-// Ruta para aprobar una reserva
-app.post("/api/reservas/aprobar/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query("UPDATE reservas SET aprobado = true WHERE id = $1", [id]);
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error al aprobar reserva:", error);
-    res.status(500).json({ error: "Error al aprobar reserva" });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+app.listen(port, () => {
+  console.log(`Servidor corriendo en el puerto ${port}`);
 });
