@@ -1,16 +1,27 @@
+
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const multer = require('multer');
+const mongoose = require('mongoose');
 const path = require('path');
-const fs = require('fs');
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Conexión a MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('✅ Conectado a MongoDB'))
+.catch(err => console.error('❌ Error al conectar a MongoDB:', err));
+
+const Reserva = require('./models/Reserva');
 
 // Configuración de subida de archivos (comprobantes)
 const upload = multer({ dest: 'uploads/' });
@@ -51,10 +62,12 @@ app.post('/reservar', upload.single('comprobante'), async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
+    await Reserva.create({ nombre, correo });
+
     res.status(200).json({ mensaje: 'Reserva enviada correctamente.' });
   } catch (error) {
-    console.error('Error al enviar correo:', error);
-    res.status(500).json({ error: 'Error al enviar el correo.' });
+    console.error('Error al enviar correo o guardar reserva:', error);
+    res.status(500).json({ error: 'Error al procesar la reserva.' });
   }
 });
 
@@ -62,7 +75,6 @@ app.post('/reservar', upload.single('comprobante'), async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
-// ✅ PUERTO CORREGIDO para Railway
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

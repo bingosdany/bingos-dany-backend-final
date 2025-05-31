@@ -109,11 +109,11 @@
     <p style="margin-top: 10px;"><strong>WhatsApp atención:</strong><br>3207171009</p>
   </div>
 
-  <form id="formulario">
-    <input type="text" name="name" placeholder="Tu nombre" required>
-    <input type="email" name="email" placeholder="Tu correo" required>
-    <input type="number" name="count" placeholder="Cantidad de cartones" required>
-    <input type="file" name="proof" accept="image/*,application/pdf" required>
+  <form id="formulario" enctype="multipart/form-data">
+    <input type="text" name="nombre" placeholder="Tu nombre" required>
+    <input type="email" name="correo" placeholder="Tu correo" required>
+    <input type="number" name="cantidad" placeholder="Cantidad de cartones" required>
+    <input type="file" name="comprobante" accept="image/*,application/pdf" required>
     <button type="submit">Enviar</button>
   </form>
 
@@ -135,7 +135,7 @@
       e.preventDefault();
       const formData = new FormData(e.target);
 
-      fetch("https://bingos-dany-backend-final-production.up.railway.app/api/users", {
+      fetch("https://bingos-dany-backend-final-production.up.railway.app/reservar", {
         method: "POST",
         body: formData
       })
@@ -166,5 +166,6 @@
       }
     }
   </script>
+
 </body>
 </html>
