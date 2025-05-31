@@ -61,7 +61,12 @@ app.post('/reservar', upload.single('comprobante'), async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    await Reserva.create({ nombre, correo });
+
+    await Reserva.create({
+      nombre,
+      correo,
+      comprobante: comprobante.filename // Guardamos el nombre del archivo
+    });
 
     res.status(200).json({ mensaje: 'Reserva enviada correctamente.' });
   } catch (error) {
@@ -83,8 +88,8 @@ app.get('/api/reservas', async (req, res) => {
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 👈 servimos comprobantes
 
-// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
