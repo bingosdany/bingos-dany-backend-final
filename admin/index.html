@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -44,6 +43,10 @@
     button:hover {
       background: #218838;
     }
+    img {
+      max-width: 100px;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -54,6 +57,7 @@
         <th>Nombre</th>
         <th>Correo</th>
         <th>Fecha</th>
+        <th>Comprobante</th>
         <th>Acción</th>
       </tr>
     </thead>
@@ -69,10 +73,22 @@
         const tbody = document.querySelector("#tabla-reservas tbody");
         reservas.forEach(r => {
           const fila = document.createElement("tr");
+
+          let comprobanteHTML = "Sin archivo";
+          if (r.comprobante) {
+            const url = "/uploads/" + r.comprobante;
+            if (r.comprobante.toLowerCase().endsWith(".pdf")) {
+              comprobanteHTML = `<a href="${url}" target="_blank">Ver PDF</a>`;
+            } else {
+              comprobanteHTML = `<img src="${url}" alt="Comprobante">`;
+            }
+          }
+
           fila.innerHTML = `
             <td>${r.nombre}</td>
             <td>${r.correo}</td>
             <td>${new Date(r.fecha).toLocaleString()}</td>
+            <td>${comprobanteHTML}</td>
             <td><button onclick="alert('Reserva marcada como validada')">Validar</button></td>
           `;
           tbody.appendChild(fila);
