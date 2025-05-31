@@ -1,3 +1,4 @@
+
 const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
@@ -25,18 +26,19 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
+// Ruta para recibir usuarios y comprobantes
 app.post("/api/users", upload.single("proof"), async (req, res) => {
   try {
     const { name, email, count } = req.body;
     const proofFile = req.file;
 
-    // Guardar datos en la base de datos
+    // Guardar en la base de datos
     await pool.query(
       "INSERT INTO reservas (nombre, correo, cartones, comprobante, aprobado, fecha) VALUES ($1, $2, $3, $4, $5, NOW())",
       [name, email, count, proofFile?.originalname || null, false]
     );
 
-    // Configurar transporte de correo
+    // Enviar correo
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -67,6 +69,29 @@ app.post("/api/users", upload.single("proof"), async (req, res) => {
   } catch (error) {
     console.error("Error al procesar la solicitud:", error);
     res.status(500).json({ error: "Error al enviar el correo o guardar en la base de datos." });
+  }
+});
+
+// Ruta para obtener todas las reservas
+app.get("/api/reservas", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM reservas ORDER BY fecha DESC");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener reservas:", error);
+    res.status(500).json({ error: "Error al obtener reservas" });
+  }
+});
+
+// Ruta para aprobar una reserva
+app.post("/api/reservas/aprobar/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("UPDATE reservas SET aprobado = true WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error al aprobar reserva:", error);
+    res.status(500).json({ error: "Error al aprobar reserva" });
   }
 });
 
