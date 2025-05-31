@@ -1,9 +1,86 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Panel de Administración</title>
+  <meta charset="UTF-8">
+  <title>Panel Administrativo - Bingos Dany</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #ffc107;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    button {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+  </style>
 </head>
 <body>
-    <h1>Bienvenido al Panel de Administración</h1>
+  <h1>Reservas Recibidas - Bingos Dany</h1>
+  <table id="tabla-reservas">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Fecha</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Filas dinámicas -->
+    </tbody>
+  </table>
+
+  <script>
+    fetch("/api/reservas")
+      .then(response => response.json())
+      .then(reservas => {
+        const tbody = document.querySelector("#tabla-reservas tbody");
+        reservas.forEach(r => {
+          const fila = document.createElement("tr");
+          fila.innerHTML = `
+            <td>${r.nombre}</td>
+            <td>${r.correo}</td>
+            <td>${new Date(r.fecha).toLocaleString()}</td>
+            <td><button onclick="alert('Reserva marcada como validada')">Validar</button></td>
+          `;
+          tbody.appendChild(fila);
+        });
+      })
+      .catch(err => {
+        console.error("Error cargando reservas:", err);
+      });
+  </script>
 </body>
 </html>
