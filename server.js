@@ -1,4 +1,3 @@
-
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
@@ -71,10 +70,21 @@ app.post('/reservar', upload.single('comprobante'), async (req, res) => {
   }
 });
 
+// Ruta para ver reservas desde el panel
+app.get('/api/reservas', async (req, res) => {
+  try {
+    const reservas = await Reserva.find().sort({ fecha: -1 });
+    res.json(reservas);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener reservas' });
+  }
+});
+
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
