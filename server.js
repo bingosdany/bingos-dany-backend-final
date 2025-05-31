@@ -9,10 +9,12 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configurar PostgreSQL
+// Configurar conexión a PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.DATABASE_URL.includes("railway.app")
+    ? { rejectUnauthorized: false }
+    : false,
 });
 
 // Configurar multer para archivos
@@ -23,19 +25,18 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-// Ruta principal de formulario
 app.post("/api/users", upload.single("proof"), async (req, res) => {
   try {
     const { name, email, count } = req.body;
     const proofFile = req.file;
 
-    // Guardar en base de datos
+    // Guardar datos en la base de datos
     await pool.query(
       "INSERT INTO reservas (nombre, correo, cartones, comprobante, aprobado, fecha) VALUES ($1, $2, $3, $4, $5, NOW())",
-      [name, email, count, proofFile.originalname, false]
+      [name, email, count, proofFile?.originalname || null, false]
     );
 
-    // Enviar correo
+    // Configurar transporte de correo
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -62,10 +63,10 @@ app.post("/api/users", upload.single("proof"), async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Registro guardado y correo enviado correctamente." });
+    res.status(200).json({ message: "Correo enviado y datos guardados correctamente." });
   } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Error al procesar el registro." });
+    console.error("Error al procesar la solicitud:", error);
+    res.status(500).json({ error: "Error al enviar el correo o guardar en la base de datos." });
   }
 });
 
