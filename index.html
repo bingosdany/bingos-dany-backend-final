@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bingos Dany</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
       min-height: 100vh;
@@ -21,10 +17,7 @@
       justify-content: flex-start;
       padding: 20px;
     }
-    .logo {
-      width: 350px;
-      margin-bottom: 20px;
-    }
+    .logo { width: 350px; margin-bottom: 20px; }
     .info-box {
       background-color: rgba(255, 255, 255, 0.9);
       padding: 15px 25px;
@@ -66,9 +59,7 @@
       cursor: pointer;
       border: none;
     }
-    button:hover {
-      background-color: #ffb300;
-    }
+    button:hover { background-color: #ffb300; }
     .progress-container {
       background: rgba(255, 255, 255, 0.8);
       margin-top: 30px;
@@ -135,7 +126,7 @@
       e.preventDefault();
       const formData = new FormData(e.target);
 
-      fetch("https://bingos-dany-backend-final-production.up.railway.app/reservar", {
+      fetch("https://bingos-dany-backend-production.up.railway.app/reservar", {
         method: "POST",
         body: formData
       })

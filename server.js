@@ -28,7 +28,7 @@ const upload = multer({ dest: 'uploads/' });
 
 // Ruta para procesar el formulario
 app.post('/reservar', upload.single('comprobante'), async (req, res) => {
-  const { nombre, correo } = req.body;
+  const { nombre, correo, cantidad } = req.body;
   const comprobante = req.file;
 
   if (!nombre || !correo || !comprobante) {
@@ -39,6 +39,7 @@ app.post('/reservar', upload.single('comprobante'), async (req, res) => {
     const nuevaReserva = new Reserva({
       nombre,
       correo,
+      cantidad,
       comprobante: comprobante.filename
     });
 
